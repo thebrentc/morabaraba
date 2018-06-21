@@ -1,0 +1,60 @@
+body * { 
+    font-family: sans-serif; color: white; text-shadow: 3px 3px 2px #000000;
+}
+body { 
+/*    background-color: Khaki; */
+    background: linear-gradient(red, green, blue);    
+    background-color: blue;
+    background-repeat: no-repeat;
+}
+.status { font-variant: small-caps; padding: 3px; }
+.status.active { font-weight: bold; text-decoration: underline; }
+.status.inactive {  }
+/*.status.active:before { content: "*"; }*/
+small { font-size: 60%; }
+
+/* TODO black gradient from left
+#root {
+    margin-top: -1.5em; margin-left: -1em; bottom: 0; 
+    background: linear-gradient(to right, black 1%, transparent 90%);
+} */    
+
+.intersection {
+    border-radius: 2em;
+    width: 2.6em;
+    height: 2.6em;
+}
+.game-board { width: 30em; text-align: center; }
+.board-row { padding-top: 0.75em; padding-bottom: 0.75em; }
+.intersection { margin-left: 1em; margin-right: 1em; position: relative; }
+#i9, #i10, #i11 { left: -2.5em; }
+#i12, #i13, #i14 { right: -2.5em; }
+#i3, #i19 { left: -4.75em; }
+#i5, #i21 { left: 4.75em; }
+#i0, #i22 { left: -9em; }
+#i2, #i24 { left: 9em; }
+
+/* TODO: Fix boardgrid SVG/css
+h1 { width: 97%; text-align: center; } 
+.game-board { position: absolute; left: 30%; top: 7em; }
+#boardgrid { position: absolute; top: 1.5em; left: 3.5em; height: 23em; width: 24em; z-index: -1; }
+#rules { position: fixed; bottom: 1em; left: 1em; }
+#rules textarea { width: 40em; height: 40em; }
+#status { position: absolute; top: -1em; left: 26%; }
+#phase { position: absolute; top: 13em; left: 44%; } 
+*/
+#root { width: 100%; text-align: center; }
+.game-board { width: 100%; text-align: center; }
+#boardgrid { position: absolute; margin-top: -23.75em; margin-left: -11.5em; height: 23em; width: 24em; z-index: -1; }
+/* #boardgrid { font-size: 118%; } // to match bootstrap if used */
+
+#rules { margin-top: -2em; padding-bottom: 2em; }
+#rules a { text-decoration: none; }
+
+.intersection[value="0"] { background-color: grey; /*opacity: 0.5;*/ }
+.intersection[value="1"] { background-color: gold; border: solid 0.5px black; }
+.intersection[value="2"] { background-color: black; border: solid 1px black; }
+.intersection[value="0"]:hover { background-color: darkgrey; }
+.active { font-weight: bold; }
+
+
