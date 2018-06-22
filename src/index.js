@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 //import Line from 'react-line'; // error
 import './index.css';
 //import './vendor/bootstrap/css/bootstrap.css';
+import {games} from './games.js';
 
 class Intersection extends React.Component {
 
@@ -17,7 +18,7 @@ class Intersection extends React.Component {
     let id = "i"+this.props.id;
     return (       
       <button className="intersection" value={this.props.value} id={id} ref={this.props.iRef} onClick={() => this.props.onClick()}>
-      <small>{/*this.props.id*/} {/*this.props.value*/}</small> 
+      <small>{this.props.id} {/*this.props.value*/}</small> 
         {/* TODO */}
       </button>
     );
@@ -90,6 +91,8 @@ class PlayerLabel extends React.Component {
   }
 }
 
+
+
 class Phase extends React.Component {
   
   render() {
@@ -101,13 +104,28 @@ class Phase extends React.Component {
   }
 }
 
+class Undo extends React.Component {
+
+ constructor(props) {
+    super(props);
+    this.state = {
+    };
+  }
+  
+  render() {
+    return (       
+      <button onClick={() => this.props.onClick()}>Undo</button>
+    );
+  }
+}
+
 class Board extends React.Component {
 
   constructor(props) {
     super(props);
 
     // available paths for mills
-   let path = [ [0,1,2],[3,4,5],[6,7,8],[0,10,11],[12,13,14],[16,17,18 ],[19,20,21],[22,23,24],[0,9,22],[3,10,19],[6,11,16],[8,12,18],[5,13,21],[2,14,24],[1,4,7],[17,20,23],[0,3,6],[2,5,8],[18,21,24],[16,19,22] ];
+   let path = [ [0,1,2],[3,4,5],[6,7,8],[9,10,11],[12,13,14],[15,16,17],[18,19,20],[21,22,23],[0,9,21],[3,10,18],[6,11,15],[8,12,17],[5,13,20],[2,14,23],[1,4,7],[16,19,22],[0,3,6],[2,5,8],[17,20,23],[15,18,21] ];   
             
     // init state from game state prop passed
     this.state = {
@@ -118,8 +136,8 @@ class Board extends React.Component {
          black: this.props.game.black,
          player: this.props.game.player,
          phase: this.props.game.phase,
-    }
-    
+         history: null,
+    }    
   }
 
   /* check if player has (formed a new) mill */
@@ -155,6 +173,7 @@ class Board extends React.Component {
   }
   
   handleClick(i) {
+
     //copy instead of mutating //immutability is important //?
     const intersections = this.state.intersections.slice();     
     var phase = this.state.phase;
@@ -162,7 +181,18 @@ class Board extends React.Component {
     var white = this.state.white;     
     var black = this.state.black; 
     
-    // "Placing the cows", // || "Shooting a cow 1" || "Shooting a cow 2" || "Moving the cows a" || "Moving the cows b"|| "Flying the cows a" || "Flying the cows b"
+    // remember history
+    let history = {
+        intersections: this.state.intersections,
+        milled: this.state.milled,
+        player: this.state.player,
+        white: this.state.white,
+        black: this.state.black,
+        phase: this.state.phase,
+        history: this.state.history,
+    }
+    this.setState({history: history});    
+    
     // TODO Flying the cows
     if (phase === "Placing the cows") {
         if (intersections[i] === 0) { // check if empty
@@ -174,16 +204,15 @@ class Board extends React.Component {
             // check if mill
             let mill = this.playerHasMill(player, intersections);
             if (mill) {
-                // shooting
-                phase = "Shooting a cow 1";
-            } else {   
+               this.updateMills(i, intersections[i]);
+               // shooting
+               phase = "Shooting a cow 1";
+            } else {
                // toggle player
-               player = (player===1)?2:1;
-            }
-            // second phase?
-            if (white === 0 && black === 0) {
-                phase = "Moving the cows a";
-                // clear remembered mills...?
+               player = (player===1)?2:1;                        
+               if (white === 0 && black === 0) { // second phase?
+                 phase = "Moving the cows a";
+               }
             }               
         }
     } else if (phase === "Shooting a cow 1" || phase === "Shooting a cow 2" ) {
@@ -193,8 +222,12 @@ class Board extends React.Component {
            player = (player===1)?2:1;            
            // update milled
            this.updateMills(i, intersections[i]);            
-           // revert phase
-           phase = (phase === "Shooting a cow 1")?"Placing the cows":"Moving the cows a";
+           // revert or progress phase
+           if (phase === "Shooting a cow 1" && white === 0 && black === 0) { // second phase?
+                phase = "Moving the cows a";
+           } else {           
+               phase = (phase === "Shooting a cow 1")?"Placing the cows":"Moving the cows a";
+           }
         }
     } else if (phase === "Moving the cows a" || phase === "Flying the cows a") {
         if (intersections[i] === player) { // check player piece
@@ -213,6 +246,7 @@ class Board extends React.Component {
             // check if mill
             let mill = this.playerHasMill(player, intersections);
             if (mill) {
+                this.updateMills(i, intersections[i]);
                 // shooting
                 phase = "Shooting a cow 2";
             } else {   
@@ -220,20 +254,24 @@ class Board extends React.Component {
                player = (player===1)?2:1;
             }           
            // toggle phase
-           phase = (phase === "Flying the cows b")?"Flying the cows a":"Moving the cows a";
+           if (phase !== "Shooting a cow 2") {
+               phase = (phase === "Flying the cows b")?"Flying the cows a":"Moving the cows a";
+           }
        }
     }
     // check for Flying the cows...
 
+    // output game object to console for copy/paste if required    
     let game = {
         intersections: intersections,
         milled: this.state.milled,
         player: player,
         white: white,
         black: black,
-        phase: phase,                
+        phase: phase,
+        history: /*this.state.history*/ null, // skip history
     }
-    console.log(game);    
+    console.log(game);  
     
     // mutate
     this.setState({intersections: intersections});    
@@ -261,6 +299,33 @@ class Board extends React.Component {
   
   renderPhase(player, phase) {
     return <Phase player={player} phase={phase}/>;    
+  }   
+  
+  handleUndoClick() {
+    if (this.state.history) {
+        this.setState({intersections: this.state.history.intersections});    
+        this.setState({phase: this.state.history.phase});    
+        this.setState({player: this.state.history.player});        
+        this.setState({white: this.state.history.white}); 
+        this.setState({black: this.state.history.black});
+        this.setState({history: this.state.history.history});    
+        // output to console for game saving
+        let game = {
+            intersections: this.state.intersections,
+            milled: this.state.milled,
+            player: this.state.player,
+            white: this.state.white,
+            black: this.state.black,
+            phase: this.state.phase,
+            history: /*this.state.history*/ null, // skip history
+        }
+        console.log(game);        
+    }
+  }
+  
+  renderUndo() {
+    let undo = <Undo onClick={() => this.handleUndoClick()}/>;    
+    return undo;
   }   
     
   renderBoardIntersections() {
@@ -291,20 +356,20 @@ class Board extends React.Component {
           {this.renderIntersection(14)}          
         </div>
         <div className="board-row">
+          {this.renderIntersection(15)}        
           {this.renderIntersection(16)}
           {this.renderIntersection(17)}
-          {this.renderIntersection(18)}
         </div>
         <div className="board-row">
+          {this.renderIntersection(18)}        
           {this.renderIntersection(19)}
           {this.renderIntersection(20)}
-          {this.renderIntersection(21)}
           
         </div>
         <div className="board-row">
+          {this.renderIntersection(21)}        
           {this.renderIntersection(22)}
           {this.renderIntersection(23)}
-          {this.renderIntersection(24)}
         </div>
       </div>
     );
@@ -329,7 +394,10 @@ class Board extends React.Component {
       </div>
       <div id="phase">
          {this.renderPhase(this.state.player, this.state.phase)}
-      </div>      
+      </div>
+      <div id="undo">
+        {this.renderUndo()}
+      </div>
       </div>
     );
   }     
@@ -350,71 +418,15 @@ class Game extends React.Component {
       this.black = 12;
     */
     this.game = {};
-    this.game.intersections = Array(25).fill(0);
+    this.game.intersections = Array(24).fill(0);
     this.game.milled = Array(20).fill(false); 
     this.game.phase = "Placing the cows"; // || "Shooting a cow 1" || "Shooting a cow 2" || "Moving the cows a" || "Moving the cows b"|| "Flying the cows a" || "Flying the cows b"
     this.game.player = 1; // 1 || 2
     this.game.white = 12;
     this.game.black = 12;    
     
-    /* saved game */
-    /*
-    this.game =
-    {
-  "intersections": [
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0
-  ],
-  "milled": [
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false
-  ],
-  "player": 2,
-  "white": 11,
-  "black": 12,
-  "phase": "Placing the cows"
-}*/
+    /* saved games in games.js */
+    //this.game = games.nearlymovingcows; 
   }
 
   render() {  
@@ -425,8 +437,8 @@ class Game extends React.Component {
         <div className="game-board">
           <Board game={this.game} />
         </div>
+        <br/>        
         <div id="rules">
-        <h2>&nbsp;</h2>
         <p><a href="https://en.wikipedia.org/wiki/Morabaraba#Gameplay" target="_blank">[rules]</a></p>
         </div>        
       </div>
