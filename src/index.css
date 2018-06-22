@@ -10,8 +10,15 @@ body {
 .status { font-variant: small-caps; padding: 3px; }
 .status.active { font-weight: bold; text-decoration: underline; }
 .status.inactive {  }
+#status .p1_cows { color: gold; border: solid 2px gold; background-color: transparent;  } 
+#status .p2_cows { color: black; border: solid 2px black; background-color: transparent; text-shadow: none; font-weight: bold; }
+#status .p1_label * { color: gold; } 
+#status .p2_label * { color: black; text-shadow: none; font-weight: bold; }
+#status .p2_label *.active { font-weight: 1000%; font-size: 1.1em;  }
+#status .p1_label *.inactive { font-size: 90%;  }
+
+
 /*.status.active:before { content: "*"; }*/
-small { font-size: 60%; }
 
 /* TODO black gradient from left
 #root {

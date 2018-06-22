@@ -56,24 +56,34 @@ class BoardGrid extends React.Component {
             <line x1="23em" y1="0em" x2="15.25em" y2="7.25em" style={{stroke:"grey",strokeWidth:"4"}} />
             <line x1="23em" y1="22em" x2="15.25em" y2="14.5em" style={{stroke:"grey",strokeWidth:"4"}} />
             <line x1="0em" y1="22em" x2="8em" y2="14.5em" style={{stroke:"grey",strokeWidth:"4"}} />
-            
-            
-            
         </svg>
     );
   }     
 }
 
-class PlayerStatus extends React.Component {
-  
-  render() {
+class PlayerCows extends React.Component {
+  render() {  
+    let classname = "intersection p"+this.props.player+"_cows";  
+    let pieces = this.props.pieces;
+    if (pieces.toString().length<2) { pieces = "       "+pieces.toString()+"    "; }
     return (
-      <span>       
+    /*
+      <span className={classname}>
+      {pieces}
+      </span>*/
+      <button className={classname}>{this.props.pieces}</button>       
+    );
+  }
+}
+
+class PlayerLabel extends React.Component {
+
+  render() {
+    let classname = "p"+this.props.player+"_label";
+    return (
+      <span className={classname}>       
       <span className={this.props.active?"status active":"status inactive"}>
       Player {this.props.player}
-      </span>
-      <span>
-      <small>({this.props.pieces})</small>
       </span>
       </span>
     );
@@ -95,16 +105,21 @@ class Board extends React.Component {
 
   constructor(props) {
     super(props);
+
+    // available paths for mills
+   let path = [ [0,1,2],[3,4,5],[6,7,8],[0,10,11],[12,13,14],[16,17,18 ],[19,20,21],[22,23,24],[0,9,22],[3,10,19],[6,11,16],[8,12,18],[5,13,21],[2,14,24],[1,4,7],[17,20,23],[0,3,6],[2,5,8],[18,21,24],[16,19,22] ];
+            
+    // init state from game state prop passed
     this.state = {
-      intersections: Array(25).fill(0), // game state
-       // available paths for mills
-      path: [ [0,1,2],[3,4,5],[6,7,8],[0,10,11],[12,13,14],[16,17,18 ],[19,20,21],[22,23,24],[0,9,22],[3,10,19],[6,11,16],[8,12,18],[5,13,21],[2,14,24],[1,4,7],[17,20,23],[0,3,6],[2,5,8],[18,21,24],[16,19,22] ],
-      milled: Array(20).fill(false), // paths used in a mill
-      phase: "Placing the cows", // || "Shooting a cow 1" || "Shooting a cow 2" || "Moving the cows a" || "Moving the cows b"|| "Flying the cows"
-      player: 1, // 1 || 2
-      white: 12,
-      black: 12,
-    };
+         path: path,
+         intersections: this.props.game.intersections,
+         milled: this.props.game.milled,
+         white: this.props.game.white,
+         black: this.props.game.black,
+         player: this.props.game.player,
+         phase: this.props.game.phase,
+    }
+    
   }
 
   /* check if player has (formed a new) mill */
@@ -113,7 +128,7 @@ class Board extends React.Component {
     let milled = this.state.milled;
     for (var c = 0; c < path.length; c++) {
         if (milled[c]) { continue; } 
-        if (intersections[path[c][0]] == player && intersections[path[c][1]] == player && intersections[path[c][2]] == player) {
+        if (intersections[path[c][0]] === player && intersections[path[c][1]] === player && intersections[path[c][2]] === player) {
             milled[c] = true;
             this.setState({milled: milled});
             return true;        
@@ -125,14 +140,14 @@ class Board extends React.Component {
   
   /* helper: check if intersection is in a path */
   pathHasIntersection(path, i)  {
-    return (path[0] == i || path[1] == i || path[2] == i);
+    return (path[0] === i || path[1] === i || path[2] === i);
   }
   
   /* modify milled memory, cancel/clear remembered mills if cow shot (or moved?) */
   updateMills(i, intersection) {
     let milled = this.state.milled;
     for (var c = 0; c < milled.length; c++) {
-        if (milled[c] && this.pathHasIntersection(this.state.path[c],i) && intersection == 0) { 
+        if (milled[c] && this.pathHasIntersection(this.state.path[c],i) && intersection === 0) { 
             milled[c] = false;
         }
     }
@@ -147,13 +162,15 @@ class Board extends React.Component {
     var white = this.state.white;     
     var black = this.state.black; 
     
-    if (phase == "Placing the cows") {
-        if (intersections[i] == 0) { // check if empty
+    // "Placing the cows", // || "Shooting a cow 1" || "Shooting a cow 2" || "Moving the cows a" || "Moving the cows b"|| "Flying the cows a" || "Flying the cows b"
+    // TODO Flying the cows
+    if (phase === "Placing the cows") {
+        if (intersections[i] === 0) { // check if empty
             // place player piece 
             intersections[i] = player;
             // decrement player pieces
-            if (player == 1) { white--; }
-            if (player == 2) { black--; }        
+            if (player === 1) { white--; }
+            if (player === 2) { black--; }        
             // check if mill
             let mill = this.playerHasMill(player, intersections);
             if (mill) {
@@ -161,35 +178,36 @@ class Board extends React.Component {
                 phase = "Shooting a cow 1";
             } else {   
                // toggle player
-               player = (player==1)?2:1;
+               player = (player===1)?2:1;
             }
             // second phase?
-            if (white == 0 && black == 0) {
+            if (white === 0 && black === 0) {
                 phase = "Moving the cows a";
+                // clear remembered mills...?
             }               
         }
-    } else if (phase == "Shooting a cow 1" || phase == "Shooting a cow 2" ) {
+    } else if (phase === "Shooting a cow 1" || phase === "Shooting a cow 2" ) {
         if (intersections[i] !== 0) { // check not empty // check opponent?
             intersections[i] = 0;
            // toggle player
-           player = (player==1)?2:1;            
+           player = (player===1)?2:1;            
            // update milled
            this.updateMills(i, intersections[i]);            
            // revert phase
-           phase = (phase == "Shooting a cow 1")?"Placing the cows":"Moving the cows a";
+           phase = (phase === "Shooting a cow 1")?"Placing the cows":"Moving the cows a";
         }
-    } else if (phase == "Moving the cows a") {
-        if (intersections[i] == player) { // check player piece
+    } else if (phase === "Moving the cows a" || phase === "Flying the cows a") {
+        if (intersections[i] === player) { // check player piece
             // 'pick up' piece
             intersections[i] = 0;
             // update milled
             this.updateMills(i, intersections[i]);
            // toggle phase
-            phase = "Moving the cows b";
+           phase = (phase === "Flying the cows a")?"Flying the cows b":"Moving the cows b";            
         }        
     }
-    else if (phase == "Moving the cows b") {
-        if (intersections[i] == 0) { // check empty
+    else if (phase === "Moving the cows b" || phase === "Flying the cows b") {
+        if (intersections[i] === 0) { // check empty
             // place piece
             intersections[i] = player;
             // check if mill
@@ -199,13 +217,23 @@ class Board extends React.Component {
                 phase = "Shooting a cow 2";
             } else {   
                // toggle player
-               player = (player==1)?2:1;
+               player = (player===1)?2:1;
             }           
            // toggle phase
-           phase = "Moving the cows a";
+           phase = (phase === "Flying the cows b")?"Flying the cows a":"Moving the cows a";
        }
-    } else if (phase == "Flying the cows") {
-    }    
+    }
+    // check for Flying the cows...
+
+    let game = {
+        intersections: intersections,
+        milled: this.state.milled,
+        player: player,
+        white: white,
+        black: black,
+        phase: phase,                
+    }
+    console.log(game);    
     
     // mutate
     this.setState({intersections: intersections});    
@@ -221,10 +249,15 @@ class Board extends React.Component {
     return intersection;
   } 
   
-  renderPlayerStatus(player, active, pieces) {
-    let playerStatus = <PlayerStatus player={player} active={active} pieces={pieces}/>;    
-    return playerStatus;
+  renderPlayerLabel(player, active, pieces) {
+    let playerLabel = <PlayerLabel player={player} active={active} pieces={pieces}/>;    
+    return playerLabel;
   } 
+  
+  renderPlayerCows(player, pieces) {
+    let playerCows = <PlayerCows player={player} pieces={pieces} />;    
+    return playerCows;    
+  }  
   
   renderPhase(player, phase) {
     return <Phase player={player} phase={phase}/>;    
@@ -284,14 +317,17 @@ class Board extends React.Component {
   render() {
     return (
       <div>
-      <div id = "status">
-         {this.renderPlayerStatus(1,(this.state.player==1)?true:false,this.state.white)} vs {this.renderPlayerStatus(2,(this.state.player==2)?true:false,this.state.black)}
+      <div id="status">
+      {this.renderPlayerCows(1, this.state.white)}
+      {this.renderPlayerLabel(1,(this.state.player===1)?true:false,this.state.white)} 
+       vs  {this.renderPlayerLabel(2,(this.state.player===2)?true:false,this.state.black)}
+      {this.renderPlayerCows(2, this.state.black)}      
       </div>
       <div className="board"> 
           {this.renderBoardIntersections()}
           {this.renderBoardGrid()}          
       </div>
-      <div id = "phase">
+      <div id="phase">
          {this.renderPhase(this.state.player, this.state.phase)}
       </div>      
       </div>
@@ -300,12 +336,94 @@ class Board extends React.Component {
 }
 
 class Game extends React.Component {
-  render() {
+
+  constructor(props) {
+    super(props);
+
+    // defaults
+    /*
+      this.intersections = Array(25).fill(0); // game state
+      this.milled = Array(20).fill(false); // paths used in a mill      
+      this.phase = "Placing the cows"; // || "Shooting a cow 1" || "Shooting a cow 2" || "Moving the cows a" || "Moving the cows b"|| "Flying the cows a" || "Flying the cows b"
+      this.player = 1; // 1 || 2
+      this.white = 12;
+      this.black = 12;
+    */
+    this.game = {};
+    this.game.intersections = Array(25).fill(0);
+    this.game.milled = Array(20).fill(false); 
+    this.game.phase = "Placing the cows"; // || "Shooting a cow 1" || "Shooting a cow 2" || "Moving the cows a" || "Moving the cows b"|| "Flying the cows a" || "Flying the cows b"
+    this.game.player = 1; // 1 || 2
+    this.game.white = 12;
+    this.game.black = 12;    
+    
+    /* saved game */
+    /*
+    this.game =
+    {
+  "intersections": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "milled": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "player": 2,
+  "white": 11,
+  "black": 12,
+  "phase": "Placing the cows"
+}*/
+  }
+
+  render() {  
+
     return (
       <div className="game">
         <h1>Morabaraba</h1>
         <div className="game-board">
-          <Board />
+          <Board game={this.game} />
         </div>
         <div id="rules">
         <h2>&nbsp;</h2>
