@@ -49,9 +49,9 @@ body {
 
 /* cursor indicators */
 .board.placing-the-cows, .board.placing-the-cows * { cursor: default; }
-.board.moving-the-cows-a, .board.moving-the-cows-a *, .board.flying-the-cows-a, .board.flying-the-cows-a * { cursor: grab; }
-.board.shooting-a-cow-1, .board.shooting-a-cow-1 * { cursor: crosshair; }
-.board.shooting-a-cow-2, .board.shooting-a-cow-2 * { cursor: crosshair; }
+.board.moving-the-cows-a, .board.moving-the-cows-a *, .board.flying-the-cows-a, .board.flying-the-cows-a * { cursor: pointer; }
+.board.shooting-a-cow, .board.shooting-a-cow * { cursor: crosshair; }
+.board.shooting-a-cow, .board.shooting-a-cow * { cursor: crosshair; }
 
 #rules { margin-top: -2em; padding-bottom: 2em; }
 #rules a { text-decoration: none; }
@@ -66,4 +66,5 @@ body {
 .morabutton:hover { cursor: pointer; }
 #undo { margin-top: 1em; margin-left: -6em; }
 #rules { margin-top: -3.75em; margin-left: 6em; }
-
+#message {  font-weight: bold; font-size: 100%; padding-top: 0.5em;}
+#message, #message * { color: red; text-shadow:2px 2px 2px #000000, 8px 8px 8px yellow, -8px -8px 8px yellow; }
