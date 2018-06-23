@@ -114,7 +114,7 @@ class Undo extends React.Component {
   
   render() {
     return (       
-      <button onClick={() => this.props.onClick()}>Undo</button>
+      <button onClick={() => this.props.onClick()}>undo</button>
     );
   }
 }
