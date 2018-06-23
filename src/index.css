@@ -47,6 +47,12 @@ body {
 #boardgrid { position: absolute; margin-top: -23.75em; margin-left: -11.5em; height: 23em; width: 24em; z-index: -1; }
 /* #boardgrid { font-size: 118%; } // to match bootstrap if used */
 
+/* cursor indicators */
+.board.placing-the-cows, .board.placing-the-cows * { cursor: default; }
+.board.moving-the-cows-a, .board.moving-the-cows-a *, .board.flying-the-cows-a, .board.flying-the-cows-a * { cursor: grab; }
+.board.shooting-a-cow-1, .board.shooting-a-cow-1 * { cursor: crosshair; }
+.board.shooting-a-cow-2, .board.shooting-a-cow-2 * { cursor: crosshair; }
+
 #rules { margin-top: -2em; padding-bottom: 2em; }
 #rules a { text-decoration: none; }
 
@@ -56,5 +62,8 @@ body {
 .intersection[value="0"]:hover { background-color: darkgrey; }
 .active { font-weight: bold; }
 
-#undo { margin-top: 0.3em; }
-#undo button { background-color: black; border: solid 1px darkblue; border-radius: 0.5em; font-weight: bold; color: red; padding-top: 3px; padding-bottom: 3px; text-variant: small-caps; }
+.morabutton { background-color: grey; border-radius: 0.5em; font-weight: bold; padding-top: 3px; padding-bottom: 3px; text-variant: small-caps; text-shadow: none; color: brown; }
+.morabutton:hover { cursor: pointer; }
+#undo { margin-top: 1em; margin-left: -6em; }
+#rules { margin-top: -3.75em; margin-left: 6em; }
+
