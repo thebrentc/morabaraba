@@ -1,5 +1,7 @@
 body * { 
     font-family: sans-serif; color: white; text-shadow: 3px 3px 2px #000000;
+    padding: 0;
+    margin: 0;
 }
 body { 
 /*    background-color: Khaki; */
@@ -31,7 +33,15 @@ body {
     width: 2.6em;
     height: 2.6em;
 }
-.game-board { width: 30em; text-align: center; }
+
+#root { width: 100%; text-align: center; }
+/* TODO: Fix boardgrid SVG/css */
+.game-board { width: 100%; text-align: center; }
+#board { }
+#boardintersections { }
+#boardgrid { position: absolute; margin-top: -24em; margin-left: -11.5em; height: 23em; width: 24em; z-index: -1; }
+#svg { position: absolute; top: 0; left: 0; height: 100%; width:100%; border: solid 1px pink; z-index: -1;  }
+/* #boardgrid { font-size: 118%; } // to match bootstrap if used */
 .board-row { padding-top: 0.75em; padding-bottom: 0.75em; }
 .intersection { margin-left: 1em; margin-right: 1em; position: relative; }
 #i9, #i10, #i11 { left: -2.5em; }
@@ -40,12 +50,6 @@ body {
 #i5, #i20 { left: 4.75em; }
 #i0, #i21 { left: -9em; }
 #i2, #i23 { left: 9em; }
-
-/* TODO: Fix boardgrid SVG/css */
-#root { width: 100%; text-align: center; }
-.game-board { width: 100%; text-align: center; }
-#boardgrid { position: absolute; margin-top: -23.75em; margin-left: -11.5em; height: 23em; width: 24em; z-index: -1; }
-/* #boardgrid { font-size: 118%; } // to match bootstrap if used */
 
 /* cursor indicators */
 .board.placing-the-cows, .board.placing-the-cows * { cursor: default; }

@@ -4,17 +4,49 @@ import ReactDOM from 'react-dom';
 import './index.css';
 //import './vendor/bootstrap/css/bootstrap.css';
 import {games} from './games.js';
+//import './vendor/raphael.min.js'; // error
+//import './vendor/react-lineto.js'; // error 'define' is not defined 
+
+/* Standard JS functions for SVG help */
+// ref: https://www.beyondjava.net/how-to-connect-html-elements-with-an-arrow-using-svg
+function findAbsolutePosition(htmlElement) {
+  var x = htmlElement.offsetLeft;
+  var y = htmlElement.offsetTop;
+  for (var x=0, y=0, el=htmlElement; 
+       el != null; 
+       el = el.offsetParent) {
+         x += el.offsetLeft;
+         y += el.offsetTop;
+  }
+  return {
+      "x": x,
+      "y": y
+  };
+}
+
+// ref: https://tzi.fr/js/convert-em-in-px/ 
+function getRootElementFontSize(e) {
+  // Returns a number
+  return parseFloat(
+    // of the computed font-size, so in px
+    getComputedStyle(
+      e
+    ).fontSize
+  );
+}
+
 
 class Intersection extends React.Component {
 
  constructor(props) {
     super(props);
     this.state = {
-      value: null, // -> {this.value} ??
+      value: null, // -> {this.value} ??    
     };
   }
-  
+    
   render() {
+    //console.log(this);
     let id = "i"+this.props.id;
     return (       
       <button className="intersection" value={this.props.value} id={id} ref={this.props.iRef} onClick={() => this.props.onClick()}>
@@ -131,13 +163,10 @@ class Board extends React.Component {
 
   constructor(props) {
     super(props);
-
-    // available paths for mills
-   let path = [ [0,1,2],[3,4,5],[6,7,8],[9,10,11],[12,13,14],[15,16,17],[18,19,20],[21,22,23],[0,9,21],[3,10,18],[6,11,15],[8,12,17],[5,13,20],[2,14,23],[1,4,7],[16,19,22],[0,3,6],[2,5,8],[17,20,23],[15,18,21] ];   
             
     // init state using game state prop passed
     this.state = {
-         path: path,
+         millPath: this.props.game.millPath,
          intersections: this.props.game.intersections,
          milled: this.props.game.milled,
          white: this.props.game.white,
@@ -153,11 +182,11 @@ class Board extends React.Component {
 
   /* check if player has (formed a new) mill */
   playerHasMill(player, intersections) { 
-    let path = this.state.path;    
+    let millPath = this.state.millPath;    
     let milled = this.state.milled;
-    for (var c = 0; c < path.length; c++) {
+    for (var c = 0; c < millPath.length; c++) {
         if (milled[c]) { continue; } 
-        if (intersections[path[c][0]] === player && intersections[path[c][1]] === player && intersections[path[c][2]] === player) {
+        if (intersections[millPath[c][0]] === player && intersections[millPath[c][1]] === player && intersections[millPath[c][2]] === player) {
             return true;        
         }
     }
@@ -165,15 +194,15 @@ class Board extends React.Component {
     return false;
   }
   
-  /* helper: check if intersection is in a path */
-  pathHasIntersection(path, i)  {
-    return (path[0] === i || path[1] === i || path[2] === i);
+  /* helper: check if intersection is in a millPath */
+  millPathHasIntersection(millPath, i)  {
+    return (millPath[0] === i || millPath[1] === i || millPath[2] === i);
   }
   
-  /* helper to check if path is milled by any player */
-  pathIsMilled(path, intersections) {
+  /* helper to check if millPath is milled by any player */
+  millPathIsMilled(millPath, intersections) {
     for (var p = 1; p < 3; p++) {
-        if (intersections[path[0]] === p && intersections[path[1]] === p && intersections[path[2]] === p) {
+        if (intersections[millPath[0]] === p && intersections[millPath[1]] === p && intersections[millPath[2]] === p) {
             return true;
         }
     } 
@@ -186,8 +215,6 @@ class Board extends React.Component {
     // check for win at relevant phases    
     let winner = null;    
     if (phase ===  "Moving the cows a" || phase === "Flying the cows a") {        
-//    console.log("1",black,this.howManyPieces(1, intersections));
-  //  console.log("2",white,this.howManyPieces(2, intersections));                
         if (this.howManyPieces(1, intersections) < 3) {
             winner = 2;
         } else if (this.howManyPieces(2, intersections) < 3) {
@@ -201,7 +228,7 @@ class Board extends React.Component {
   updateAllMills(intersections) {
     let milled = this.state.milled;
     for (var c = 0; c < milled.length; c++) {
-        if (this.pathIsMilled(this.state.path[c], intersections)) {
+        if (this.millPathIsMilled(this.state.millPath[c], intersections)) {
             milled[c] = true;
         } else {
             milled[c] = false;        
@@ -357,9 +384,9 @@ class Board extends React.Component {
     }
     // check for draw...
   }
-
+  
   renderIntersection(i) {
-    let intersection = <Intersection id={i} iRef={this.el= this.e = 'i'+i} value={this.state.intersections[i]} onClick={() => this.handleClick(i)}/>;    
+    let intersection = <Intersection id={i} iRef={this.el= this.e = 'i'+i} value={this.state.intersections[i]} onClick={() => this.handleClick(i)}/>;
     //this.intersections[i] = this.e;
     return intersection;
   } 
@@ -412,7 +439,7 @@ class Board extends React.Component {
     
   renderBoardIntersections() {
     return (
-      <div>
+      <div id="boardintersections">
         <div className="board-row">
           {this.renderIntersection(0)}
           {this.renderIntersection(1)}
@@ -466,6 +493,7 @@ class Board extends React.Component {
     // pass phase to board to modify cursor etc.
     let classname = "board "+this.state.phase.toLowerCase().replace(/ /g,"-");
     
+    // {this.renderBoardGrid()} replaced with window.onload SVG
     return (
       <div>
       <div id="status">
@@ -477,9 +505,8 @@ class Board extends React.Component {
       <div id="message">
           {this.renderMessage(this.state.message)}
       </div>
-      <div className={classname}> 
+      <div id="board" className={classname}> 
           {this.renderBoardIntersections()}
-          {this.renderBoardGrid()}          
       </div>
       <div id="phase">
          {this.renderPhase(this.state.player, this.state.phase)}
@@ -497,6 +524,12 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
 
+    // paths
+    let path =[ [0,1],[1,2],[3,4],[4,5],[6,7],[7,8],[9,10],[10,11],[12,13],[13,14],[15,16],[16,17],[18,19],[19,20],[21,22],[22,23],[0,9],[9,21],[3,10],[10,18],[6,11],[11,15],[1,4],[4,7],[16,19],[19,22],[8,12],[12,17],[5,13],[13,20],[2,14],[14,23],[0,3],[3,6],[2,5],[5,8],[21,18],[18,15],[23,20],[20,17] ];
+    
+    // available paths for mills
+   let millPath = [ [0,1,2],[3,4,5],[6,7,8],[9,10,11],[12,13,14],[15,16,17],[18,19,20],[21,22,23],[0,9,21],[3,10,18],[6,11,15],[8,12,17],[5,13,20],[2,14,23],[1,4,7],[16,19,22],[0,3,6],[2,5,8],[17,20,23],[15,18,21] ];       
+
     // defaults
     this.game = {};
     this.game.intersections = Array(24).fill(0);
@@ -506,11 +539,59 @@ class Game extends React.Component {
     this.game.player = 1; // 1 || 2
     // pieces to put down
     this.game.white = 12; 
-    this.game.black = 12; 
+    this.game.black = 12;
         
     /* saved games in games.js */
     //this.game = games.nearlymovingcows; 
+
+    // add paths    
+    this.game.millPath = millPath;
+    this.game.path = path;    
   }
+  
+  
+  componentDidMount() {      
+  
+    //let intersections = document.querySelectorAll('.intersection');
+    // thanks https://stackoverflow.com/a/288731/9978941
+    //let bounds = intersections[0].getBoundingClientRect();
+    // ...
+    
+    // resort to plain js and svg for connector lines
+    window.onload = function() {
+    
+    let path =[ [0,1],[1,2],[3,4],[4,5],[6,7],[7,8],[9,10],[10,11],[12,13],[13,14],[15,16],[16,17],[18,19],[19,20],[21,22],[22,23],[0,9],[9,21],[3,10],[10,18],[6,11],[11,15],[1,4],[4,7],[16,19],[19,22],[8,12],[12,17],[5,13],[13,20],[2,14],[14,23],[0,3],[3,6],[2,5],[5,8],[21,18],[18,15],[23,20],[20,17] ];
+        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute('id','svg');        
+        for (var p = 0; p < path.length; p++) {
+            var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            line.setAttribute('id','p'+p);
+            let e1 = findAbsolutePosition(document.getElementById('i'+path[p][0]));
+            let e2 = findAbsolutePosition(document.getElementById('i'+path[p][1]));
+            // add intersection size and stroke offsets
+            let offset = getRootElementFontSize(document.getElementById('i'+path[p][0])) - 2;
+            
+            line.setAttribute('x1',e1.x+offset+"px");
+            line.setAttribute('y1',e1.y+offset+"px");
+            line.setAttribute('x2',e2.x+offset+"px");
+            line.setAttribute('y2',e2.y+offset+"px");
+            line.setAttribute("stroke", "grey")
+            line.setAttribute("stroke-width", "4px")            
+            svg.append(line);            
+        }
+
+        document.getElementsByTagName('body')[0].appendChild(svg);    
+    }
+    
+    // legacy HACK for mac
+    //window.onload = function() {
+     //   if (window.navigator.userAgent.indexOf("Macintosh") > -1) {
+      //      document.getElementById('boardgrid').style.fontSize = "84.5%";
+        //    document.getElementById('boardgrid').style.marginTop = "-25em";        
+         //   document.getElementById('boardgrid').style.marginLeft = "-12em";        
+       // }
+    //}
+ }
 
   render() {  
 
@@ -535,4 +616,10 @@ ReactDOM.render(
   <Game />,
   document.getElementById('root')
 );
+/*window.onload = function() {
+    console.log("window.onload ");
+//    let intersections = document.querySelector('.intersection');
+  //  console.log(intersections.length);      
+}
+*/
 
